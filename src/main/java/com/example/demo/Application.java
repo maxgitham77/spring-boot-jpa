@@ -7,6 +7,8 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
 import java.util.List;
@@ -22,16 +24,22 @@ public class Application {
     CommandLineRunner initializeDatabase(StudentRepository studentRepository) {
         return args -> {
             generateStudents(studentRepository);
-            // Sort students by firstName
-            Sort sort = Sort.by(Sort.Direction.ASC, "firstName");
-            studentRepository.findAll(sort)
-                    .forEach(student -> System.out.println(student.getFirstName()));
-
-            Sort sortByLastName = Sort.by("lastName").ascending().and(Sort.by("age").descending());
-            studentRepository.findAll(sortByLastName)
-                    .forEach(student -> System.out.println(student.getLastName() + " " + student.getAge()));
-
+            //sortingStudents(studentRepository);
+            PageRequest pageRequest = PageRequest.of(0, 5, Sort.by("firstName").ascending());
+            Page<Student> page = studentRepository.findAll(pageRequest);
+            System.out.println(page);
         };
+    }
+
+    private void sortingStudents(StudentRepository studentRepository) {
+        // Sort students by firstName
+        Sort sort = Sort.by(Sort.Direction.ASC, "firstName");
+        studentRepository.findAll(sort)
+                .forEach(student -> System.out.println(student.getFirstName()));
+
+        Sort sortByLastName = Sort.by("lastName").ascending().and(Sort.by("age").descending());
+        studentRepository.findAll(sortByLastName)
+                .forEach(student -> System.out.println(student.getLastName() + " " + student.getAge()));
     }
 
     private void generateStudents(StudentRepository studentRepository) {
