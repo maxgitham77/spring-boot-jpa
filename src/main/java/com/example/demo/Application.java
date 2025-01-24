@@ -2,10 +2,12 @@ package com.example.demo;
 
 import com.example.demo.entity.Student;
 import com.example.demo.repository.StudentRepository;
+import com.github.javafaker.Faker;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.data.domain.Sort;
 
 import java.util.List;
 
@@ -17,59 +19,53 @@ public class Application {
     }
 
     @Bean
-    CommandLineRunner commandLineRunner(StudentRepository studentRepository) {
+    CommandLineRunner initializeDatabase(StudentRepository studentRepository) {
         return args -> {
-            Student rosemary = new Student(
-                    "Rosemary",
-                    "Cowell",
-                    "rosemary.cowell@me.org",
-                    21
-            );
-            Student paul = new Student(
-                    "Paul",
-                    "Henry",
-                    "paul.henry@me.org",
-                    27
-            );
-            studentRepository.saveAll(List.of(rosemary, paul));
+            generateStudents(studentRepository);
+            // Sort students by firstName
+            Sort sort = Sort.by(Sort.Direction.ASC, "firstName");
+            studentRepository.findAll(sort)
+                    .forEach(student -> System.out.println(student.getFirstName()));
 
-            /*System.out.print("Number of students: ");
-            System.out.println(studentRepository.count());
-
-            studentRepository
-                    .findById(2L)
-                    .ifPresentOrElse(
-                    System.out::println, () -> System.out.println("Student with ID 2 not found")
-            );
-
-            studentRepository
-                    .findById(3L)
-                    .ifPresentOrElse(
-                            System.out::println, () -> System.out.println("Student with ID 3 not found")
-                    );
-
-            List<Student> students = studentRepository.findAll();
-            students.forEach(System.out::println);
-
-            //studentRepository.deleteById(2L);
-
-            System.out.println(studentRepository.count());*/
-
-            studentRepository.findStudentByEmail("paul.henry@me.org").ifPresentOrElse(
-                    System.out::println, () -> System.out.println("Student with the email does not exist")
-            );
-
-            studentRepository.findStudentsByFistNameEqualsAndAgeEquals(
-                    "Rosemary",
-                    21
-            ).forEach(System.out::println);
-
-            studentRepository.findStudentsByFistNameEqualsAndAgeEqualsParam(
-                    "Rosemary",
-                    21
-            ).forEach(System.out::println);
+            Sort sortByLastName = Sort.by("lastName").ascending().and(Sort.by("age").descending());
+            studentRepository.findAll(sortByLastName)
+                    .forEach(student -> System.out.println(student.getLastName() + " " + student.getAge()));
 
         };
     }
+
+    private void generateStudents(StudentRepository studentRepository) {
+        // Use Faker library to generate sample data for students
+        Faker faker = new Faker();
+
+        // Generate and save 25 sample students
+        final int SAMPLE_STUDENT_COUNT = 30;
+
+        for (int i = 0; i < SAMPLE_STUDENT_COUNT; i++) {
+            // Generate realistic sample data for a student
+            String firstName = faker.name().firstName();
+            String lastName = faker.name().lastName();
+            String email = generateEmail(firstName, lastName);
+            Integer age = faker.number().numberBetween(17, 55);
+
+            // Create a Student object
+            Student student = new Student(firstName, lastName, email, age);
+
+            // Save the student to the repository
+            studentRepository.save(student);
+        }
+    }
+
+    /**
+     * Generates an email address in the format "firstname.lastname@maxdeveloper.net".
+     *
+     * @param firstName the first name of the student
+     * @param lastName  the last name of the student
+     * @return the generated email address
+     */
+    private String generateEmail(String firstName, String lastName) {
+        return String.format("%s.%s@maxdeveloper.net", firstName.toLowerCase(), lastName.toLowerCase());
+    }
+
 
 }
