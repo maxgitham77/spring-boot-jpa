@@ -1,8 +1,13 @@
 package com.example.demo;
 
+import com.example.demo.entity.Author;
+import com.example.demo.entity.Book;
 import com.example.demo.entity.Student;
+import com.example.demo.repository.AuthorRepository;
+import com.example.demo.repository.BookRepository;
 import com.example.demo.repository.StudentRepository;
 import com.github.javafaker.Faker;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -21,14 +26,28 @@ public class Application {
     }
 
     @Bean
-    CommandLineRunner initializeDatabase(StudentRepository studentRepository) {
+    CommandLineRunner initializeDatabase(StudentRepository studentRepository, AuthorRepository authorRepository) {
+
         return args -> {
-            generateStudents(studentRepository);
+            //generateStudents(studentRepository);
             //sortingStudents(studentRepository);
-            PageRequest pageRequest = PageRequest.of(0, 5, Sort.by("firstName").ascending());
-            Page<Student> page = studentRepository.findAll(pageRequest);
-            System.out.println(page);
+            //pagingRequestStudents(studentRepository);
+
+            Author author = Author.builder()
+                    .firstName("Maxwell")
+                    .lastName("Developer")
+                    .email("maxdev@gingo.com")
+                    .age(45)
+                    .build();
+            authorRepository.save(author);
+
         };
+    }
+
+    private void pagingRequestStudents(StudentRepository studentRepository) {
+        PageRequest pageRequest = PageRequest.of(0, 5, Sort.by("firstName").ascending());
+        Page<Student> page = studentRepository.findAll(pageRequest);
+        System.out.println(page);
     }
 
     private void sortingStudents(StudentRepository studentRepository) {
